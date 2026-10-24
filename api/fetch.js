@@ -2,7 +2,7 @@
 // Public pages only: http(s), ports 80/443, no private or local addresses, robots.txt respected, HTML only, first 1.5 MB.
 // Returns the page title, its links (with anchor text) and every watched word it mentions, with the passage around it.
 const dns = require('dns').promises, net = require('net');
-const UA = 'lurkrbot/1.0 (+https://lurkr.vercel.app; reads public pages for its owner, respects robots.txt)';
+const UA = 'lurkrbot/1.0 (+https://lurkr-iota.vercel.app; reads public pages for its owner, respects robots.txt)';
 const MAX = 1.5 * 1024 * 1024, ROBOTS = new Map(), HITS = new Map();
 
 function privateIp(ip) {
