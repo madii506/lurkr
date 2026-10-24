@@ -35,7 +35,7 @@ export function createStage(canvas, { intro = false, mobile = false } = {}) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(mobile ? 1.5 : 2, devicePixelRatio || 1)); renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.setClearColor(0x030304, 1);
-  const scene = new THREE.Scene(); scene.fog = new THREE.Fog(0x030304, 9, 17);
+  const scene = new THREE.Scene(); scene.fog = new THREE.Fog(0x030304, 18, 30);
   scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), .04).texture;
   // the monitor: its top edge is y = 0, the glass at z = 0
   const W = 6.4, H = 3.8, mon = new THREE.Group(); mon.position.set(0, -H / 2 - .15, 0); scene.add(mon);
@@ -45,20 +45,20 @@ export function createStage(canvas, { intro = false, mobile = false } = {}) {
   const shade = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.ShadowMaterial({ opacity: .55 })); shade.position.z = .03; shade.receiveShadow = true; mon.add(shade);
   const top = new THREE.Mesh(new THREE.BoxGeometry(W + .4, .1, 1.4), new THREE.MeshStandardMaterial({ color: 0x131417, roughness: .6 })); top.position.set(0, 0, -.45); top.receiveShadow = true; scene.add(top);
   // the creature
-  const CS = .62, q = CS / 1.05;   // the creature's size on the screen
+  const CS = .5, q = CS / 1.05;   // the creature's size on the screen
   const lk = createLurkr({ look: 'bone', eyes: 8 }); lk.group.scale.setScalar(CS); scene.add(lk.group);
   const FOLD = poseFold();
   // light: the flash (a spot from up front), the screen's cold glow from below
   const flash = new THREE.SpotLight(0xffffff, 0, 0, .5, .6, 2); flash.position.set(1.4, 4.2, 7.6); flash.target.position.set(0, .2, 0); flash.castShadow = true; flash.shadow.mapSize.set(1024, 1024); scene.add(flash, flash.target);
   const glow = new THREE.PointLight(0xbfe6f2, 0, 0, 2); glow.position.set(0, -1.0, 1.4); scene.add(glow);
   const cam = new THREE.PerspectiveCamera(30, 1, .1, 100);
-  const st = { t: 0, intro, introT: 0, introStart: performance.now(), done: !intro, mx: 0, my: 0, smx: 0, smy: 0, twitch: 0, reel: 0, visible: true, onIntroEnd: null, flashEl: null, heroX: mobile ? 0 : -2.6 };
+  const st = { t: 0, intro, introT: 0, introStart: performance.now(), done: !intro, mx: 0, my: 0, smx: 0, smy: 0, twitch: 0, reel: 0, visible: true, onIntroEnd: null, flashEl: null, heroX: mobile ? 0 : -4.6 };
   function size() { const r = canvas.getBoundingClientRect(); renderer.setSize(r.width, r.height, false); cam.aspect = r.width / Math.max(1, r.height); cam.updateProjectionMatrix(); }
   size(); addEventListener('resize', size);
   addEventListener('pointermove', e => { st.mx = e.clientX / innerWidth * 2 - 1; st.my = e.clientY / innerHeight * 2 - 1; }, { passive: true });
   new IntersectionObserver(es => { st.visible = es[0].isIntersecting; }).observe(canvas);
   // camera keys: [t, pos, look]
-  const HERO = () => [V(st.heroX * .55 - .4, 1.7, mobile ? 14.5 : 12.6), V(st.heroX, -.15, 0)];
+  const HERO = () => [V(st.heroX * .55 - .4, 1.5, mobile ? 24 : 22), V(st.heroX, mobile ? -3 : -1.25, 0)];
   const END = 9.6;
   const K = () => [[0, V(0, .15, 3.4), V(0, -.55, 0)], [2.4, V(0, .3, 3.9), V(0, -.25, 0)], [4.6, V(.25, .38, 3.3), V(0, .06, 0)], [6.9, V(-.3, .75, 5.2), V(0, .1, 0)], [9.2, ...HERO()]];
   function camAt(t) { const k = K(); if (t <= k[0][0]) return [k[0][1], k[0][2]]; for (let i = 0; i < k.length - 1; i++) { if (t <= k[i + 1][0]) { const a = smooth((t - k[i][0]) / (k[i + 1][0] - k[i][0])); return [k[i][1].clone().lerp(k[i + 1][1], a), k[i][2].clone().lerp(k[i + 1][2], a)]; } } return [k[k.length - 1][1], k[k.length - 1][2]]; }
@@ -75,7 +75,7 @@ export function createStage(canvas, { intro = false, mobile = false } = {}) {
       if (t > 6.9 && !st.flashed && DEBUG_T == null) { st.flashed = true; if (st.flashEl) { st.flashEl.style.transition = 'none'; st.flashEl.style.opacity = .82; requestAnimationFrame(() => requestAnimationFrame(() => { st.flashEl.style.transition = 'opacity .9s cubic-bezier(.2,.8,.2,1)'; st.flashEl.style.opacity = 0; })); } }
       const [p, l] = camAt(t); cam.position.copy(p); look.copy(l);
       if (t > END && DEBUG_T == null) { st.done = true; st.onIntroEnd && st.onIntroEnd(); }
-    } else { const [p, l] = HERO(), k = smooth(Math.min(1, st.reel * 1.7)), eye = V(.34, .62, 2.2), eyeL = V(.03, .4, .27);   // scrolling leans in, right up to its eyes
+    } else { const [p, l] = HERO(), k = smooth(Math.min(1, st.reel * 1.7)), eye = V(.28, .52, 1.85), eyeL = V(.025, .33, .22);   // scrolling leans in, right up to its eyes
       cam.position.set(p.x + (eye.x - p.x) * k + st.smx * .35 * (1 - k * .7), p.y + (eye.y - p.y) * k - st.smy * .2 * (1 - k * .7), p.z + (eye.z - p.z) * k); look.set(l.x + (eyeL.x - l.x) * k, l.y + (eyeL.y - l.y) * k, l.z + (eyeL.z - l.z) * k); }
     cam.lookAt(look);
     // the screen and its light
