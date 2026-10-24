@@ -95,6 +95,12 @@ export function initFx({ stageSt } = {}) {
   const io = new IntersectionObserver(es => es.forEach(e => { if (!e.isIntersecting) return; io.unobserve(e.target); e.target.classList.add('shown'); const lab = e.target.parentElement && e.target.parentElement.querySelector('.sl'); lab && scramble(lab, 700); }), { threshold: .25 });
   $$('.split').forEach(h => io.observe(h));
   silk(); webs(); magnetic(); tilt(); story();
+  // headlines drift a little slower than the page; groups of cards and rows come in one after another
+  const heads = $$('.sec h2, .end h2');
+  (function par() { requestAnimationFrame(par); if (RM) return; for (const h of heads) { const r = h.getBoundingClientRect(); if (r.bottom < -100 || r.top > innerHeight + 100) continue; h.style.transform = `translateY(${((r.top + r.height / 2) - innerHeight / 2) * -.06}px)`; } })();
+  $$('.manners tr, .states .st, .stats .stat, details, .bsec').forEach((el, i, all) => { el.classList.add('stg'); el.style.setProperty('--d', ((i % 8) * 70) + 'ms'); });
+  const so = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); so.unobserve(e.target); } }), { threshold: .1, rootMargin: '0px 0px -8% 0px' });
+  $$('.stg').forEach(el => so.observe(el));
   // the hero leans in as you scroll: the copy lifts and fades, the camera moves toward its eyes
   const copy = $('.hero-copy'), hero = $('.hero');
   (function f() { requestAnimationFrame(f); if (!hero) return; const k = clamp(scrollY / (hero.offsetHeight || 1)); if (stageSt) stageSt.reel = k;

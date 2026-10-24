@@ -4,6 +4,7 @@ import { RoomEnvironment } from './vendor/RoomEnvironment.js';
 import { createStage } from './stage.js';
 import { createLurkr, poseStand, poseWalk, palps, mixPose, LOOKS } from './creature.js';
 import { initFx } from './fx.js';
+import { initWeb, initSmooth } from './bgweb.js';
 import { Lair, suggestName, normalize, hitRates, heads, avoids, suggestWords, host, shortPath } from './engine.js';
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const html = document.documentElement, mob = innerWidth < 1000;
@@ -17,10 +18,10 @@ let mapState = null, reading = null;   // the web map's layout and the page bein
 const intro = html.classList.contains('intro');
 const stage = createStage($('#stage'), { intro, mobile: mob });
 stage.st.flashEl = $('#flash');
-const FX = initFx({ stageSt: stage.st });
+const FX = initFx({ stageSt: stage.st }); initWeb(); initSmooth();
 function endIntro() { if (!html.classList.contains('intro')) return; setTimeout(() => FX.revealHero(), 200); $('#intro').classList.add('out'); html.classList.remove('intro', 'screen-on'); try { sessionStorage.setItem('lurkr.seen', '1'); } catch {} setTimeout(() => $('#intro') && $('#intro').remove(), 900); }
 stage.st.onIntroEnd = endIntro;
-if (intro) { setTimeout(() => html.classList.add('screen-on'), 600); $('#iSkip').onclick = () => { stage.skip(); endIntro(); }; addEventListener('keydown', e => { if (e.key === 'Escape' || e.key === 'Enter') { stage.skip(); endIntro(); } }, { once: true }); }
+if (intro) { setTimeout(() => html.classList.add('screen-on'), 900); $('#iSkip').onclick = () => { stage.skip(); endIntro(); }; addEventListener('keydown', e => { if (e.key === 'Escape' || e.key === 'Enter') { stage.skip(); endIntro(); } }, { once: true }); }
 else { $('#intro') && $('#intro').remove(); FX.revealHero(); }
 addEventListener('scroll', () => { $('#nav').classList.toggle('solid', scrollY > 40); }, { passive: true });
 const navIO = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) $$('.links a').forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id)); }), { rootMargin: '-45% 0px -50% 0px' });
@@ -53,7 +54,7 @@ function preview() { $('#pvName').textContent = B.name || 'Quiet Lurkr'; $('#pvS
   $('#pvWords').textContent = B.words.length ? B.words.join(', ') : 'no words: it keeps the long reads'; $('#pvRange').textContent = B.range === 'site' ? 'stays on the site · 4 links deep' : 'wanders off · 2 links deep'; $('#pvPace').textContent = PACE_TXT[B.pace]; }
 $('#bform').onsubmit = e => { e.preventDefault(); if (wIn.value.trim()) { addWord(wIn.value); wIn.value = ''; }
   try { const lk = lair.create({ name: B.name.trim() || suggestName(), look: { skin: B.look, eyes: B.eyes, legs: B.legs }, orders: { start: B.start, words: B.words, range: B.range, pace: B.pace } });
-    $('#bErr').textContent = ''; sel = lk.id; renderLair(true); pv.scuttle(); $('#bGo').disabled = true; setTimeout(() => { $('#bGo').disabled = false; document.getElementById('lair').scrollIntoView({ behavior: 'smooth' }); }, 1300); B.name = ''; $('#bName').value = ''; preview(); }
+    $('#bErr').textContent = ''; sel = lk.id; renderLair(true); pv.scuttle(); $('#bGo').disabled = true; setTimeout(() => { $('#bGo').disabled = false; const y = document.getElementById('lair').getBoundingClientRect().top + scrollY - 20; window.__glideTo ? window.__glideTo(y) : scrollTo({ top: y, behavior: 'smooth' }); }, 1300); B.name = ''; $('#bName').value = ''; preview(); }
   catch (err) { $('#bErr').textContent = err.message; } };
 preview();
 
@@ -118,7 +119,9 @@ function renderDetail(full) {
   }
   const [cls, label] = SC[l.status]; $('#dPill').innerHTML = `<i class="${cls}"></i>${label}`; $('#dNote').textContent = l.note || ''; $('#dPause').textContent = l.status === 'paused' ? 'resume' : 'pause';
   const sites = Object.keys(l.hosts).filter(h => l.hosts[h].pages > 0).length;
-  $('#dStats').innerHTML = [['pages read', l.stats.pages], ['links seen', l.stats.links], ['finds', l.stats.finds], ['sites', sites], ['waiting', l.queue.length]].map(([k, v]) => `<div class="card stat"><small>${k}</small><b>${v.toLocaleString()}</b></div>`).join('');
+  const SV = [['pages read', l.stats.pages], ['links seen', l.stats.links], ['finds', l.stats.finds], ['sites', sites], ['waiting', l.queue.length]];
+  if (!$('#dStats').children.length) $('#dStats').innerHTML = SV.map(([k]) => `<div class="card stat"><small>${k}</small><b data-v="0">0</b></div>`).join('');
+  $$('#dStats b').forEach((b, i) => countTo(b, SV[i][1]));
   const hr = hitRates(l), hd = heads(l), av = avoids(l), sw = suggestWords(l);
   $('#dLearn').innerHTML = `<div><div class="ch">what it learned</div><div class="lv">${hr.judged ? `<b>${hr.judged}</b> links judged` : 'Nothing judged yet: it needs a few pages first.'}${hr.early != null ? `<br>early hit rate <b>${Math.round(hr.early * 100)}%</b><div class="bar2"><i style="width:${hr.early * 100}%"></i></div>lately <b>${Math.round((hr.late || 0) * 100)}%</b><div class="bar2"><i style="width:${(hr.late || 0) * 100}%"></i></div>` : ''}</div></div>
     <div><div class="ch">heads for links about</div><div class="lv">${hd.length ? hd.map(esc).join(' · ') : '—'}</div><div class="ch" style="margin-top:16px">avoids</div><div class="lv">${av.length ? av.map(esc).join(' · ') : '—'}</div></div>
@@ -126,6 +129,8 @@ function renderDetail(full) {
   $$('#dLearn .sug button').forEach(b => b.onclick = () => { if (l.orders.words.length >= 8) return; lair.reorder(l.id, { words: [...l.orders.words, b.dataset.w] }); renderLair(true); });
 }
 let confirmDel = null;
+function countTo(el, to) { const from = +el.dataset.v || 0; if (from === to) { el.textContent = to.toLocaleString(); return; } el.dataset.v = to; const t0 = performance.now(), d = 650;
+  (function f(now) { const k = Math.min(1, (now - t0) / d), e = 1 - Math.pow(1 - k, 3); el.textContent = Math.round(from + (to - from) * e).toLocaleString(); if (k < 1 && +el.dataset.v === to) requestAnimationFrame(f); })(t0); }
 const trailRow = e => `<div class="${e.k}"><span class="t">${clock(e.at)}</span>${esc(e.m)}</div>`;
 function renderLair(full) { renderRoster(); renderDetail(full); heroLive(); }
 let pend = false; const soon = () => { if (pend) return; pend = true; setTimeout(() => { pend = false; renderLair(false); }, 350); };

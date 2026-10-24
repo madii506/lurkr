@@ -45,7 +45,8 @@ export function createStage(canvas, { intro = false, mobile = false } = {}) {
   const shade = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.ShadowMaterial({ opacity: .55 })); shade.position.z = .03; shade.receiveShadow = true; mon.add(shade);
   const top = new THREE.Mesh(new THREE.BoxGeometry(W + .4, .1, 1.4), new THREE.MeshStandardMaterial({ color: 0x131417, roughness: .6 })); top.position.set(0, 0, -.45); top.receiveShadow = true; scene.add(top);
   // the creature
-  const lk = createLurkr({ look: 'bone', eyes: 8 }); lk.group.scale.setScalar(1.05); scene.add(lk.group);
+  const CS = .62, q = CS / 1.05;   // the creature's size on the screen
+  const lk = createLurkr({ look: 'bone', eyes: 8 }); lk.group.scale.setScalar(CS); scene.add(lk.group);
   const FOLD = poseFold();
   // light: the flash (a spot from up front), the screen's cold glow from below
   const flash = new THREE.SpotLight(0xffffff, 0, 0, .5, .6, 2); flash.position.set(1.4, 4.2, 7.6); flash.target.position.set(0, .2, 0); flash.castShadow = true; flash.shadow.mapSize.set(1024, 1024); scene.add(flash, flash.target);
@@ -58,7 +59,8 @@ export function createStage(canvas, { intro = false, mobile = false } = {}) {
   new IntersectionObserver(es => { st.visible = es[0].isIntersecting; }).observe(canvas);
   // camera keys: [t, pos, look]
   const HERO = () => [V(st.heroX * .55 - .4, 1.7, mobile ? 14.5 : 12.6), V(st.heroX, -.15, 0)];
-  const K = () => [[0, V(0, .2, 4.2), V(0, -.6, 0)], [2.2, V(0, .35, 5.0), V(0, -.2, 0)], [4.0, V(-.3, .8, 6.6), V(0, .1, 0)], [5.9, ...HERO()]];
+  const END = 9.6;
+  const K = () => [[0, V(0, .15, 3.4), V(0, -.55, 0)], [2.4, V(0, .3, 3.9), V(0, -.25, 0)], [4.6, V(.25, .38, 3.3), V(0, .06, 0)], [6.9, V(-.3, .75, 5.2), V(0, .1, 0)], [9.2, ...HERO()]];
   function camAt(t) { const k = K(); if (t <= k[0][0]) return [k[0][1], k[0][2]]; for (let i = 0; i < k.length - 1; i++) { if (t <= k[i + 1][0]) { const a = smooth((t - k[i][0]) / (k[i + 1][0] - k[i][0])); return [k[i][1].clone().lerp(k[i + 1][1], a), k[i][2].clone().lerp(k[i + 1][2], a)]; } } return [k[k.length - 1][1], k[k.length - 1][2]]; }
   let last = performance.now(), look = V();
   function frame(now) {
@@ -68,12 +70,12 @@ export function createStage(canvas, { intro = false, mobile = false } = {}) {
     let on = 1, rise = 1, unfold = 1, flashK = 1;
     if (!st.done) {
       st.introT = DEBUG_T != null ? DEBUG_T : (now - st.introStart) / 1000; const t = st.introT;   // wall clock: the intro ends on time even when frames drop
-      on = smooth(lin(t, .5, 1.6)) * (t > .55 && t < 1.0 ? (Math.random() > .3 ? 1 : .55) : 1);       // the screen flickers on, then settles
-      rise = ease(lin(t, 1.3, 2.9)); unfold = t; flashK = t > 4.0 ? 1 : 0;
-      if (t > 4.0 && !st.flashed && DEBUG_T == null) { st.flashed = true; if (st.flashEl) { st.flashEl.style.transition = 'none'; st.flashEl.style.opacity = .82; requestAnimationFrame(() => requestAnimationFrame(() => { st.flashEl.style.transition = 'opacity .9s cubic-bezier(.2,.8,.2,1)'; st.flashEl.style.opacity = 0; })); } }
+      on = smooth(lin(t, .8, 2.4)) * (t > .85 && t < 1.5 ? (Math.random() > .3 ? 1 : .55) : 1);       // the screen flickers on, then settles
+      rise = ease(lin(t, 2.4, 4.6)); unfold = t; flashK = t > 6.9 ? 1 : 0;
+      if (t > 6.9 && !st.flashed && DEBUG_T == null) { st.flashed = true; if (st.flashEl) { st.flashEl.style.transition = 'none'; st.flashEl.style.opacity = .82; requestAnimationFrame(() => requestAnimationFrame(() => { st.flashEl.style.transition = 'opacity .9s cubic-bezier(.2,.8,.2,1)'; st.flashEl.style.opacity = 0; })); } }
       const [p, l] = camAt(t); cam.position.copy(p); look.copy(l);
-      if (t > 6.0 && DEBUG_T == null) { st.done = true; st.onIntroEnd && st.onIntroEnd(); }
-    } else { const [p, l] = HERO(), k = smooth(Math.min(1, st.reel * 1.7)), eye = V(.55, 1.0, 3.5), eyeL = V(.05, .68, .45);   // scrolling leans in, right up to its eyes
+      if (t > END && DEBUG_T == null) { st.done = true; st.onIntroEnd && st.onIntroEnd(); }
+    } else { const [p, l] = HERO(), k = smooth(Math.min(1, st.reel * 1.7)), eye = V(.34, .62, 2.2), eyeL = V(.03, .4, .27);   // scrolling leans in, right up to its eyes
       cam.position.set(p.x + (eye.x - p.x) * k + st.smx * .35 * (1 - k * .7), p.y + (eye.y - p.y) * k - st.smy * .2 * (1 - k * .7), p.z + (eye.z - p.z) * k); look.set(l.x + (eyeL.x - l.x) * k, l.y + (eyeL.y - l.y) * k, l.z + (eyeL.z - l.z) * k); }
     cam.lookAt(look);
     // the screen and its light
@@ -81,16 +83,16 @@ export function createStage(canvas, { intro = false, mobile = false } = {}) {
     flash.intensity = 150 * flashK;
     // the creature: rises over the edge, legs unfold one by one from folded to draped
     const D = poseDrape(st.t), J = [];
-    for (let i = 0; i < 8; i++) { const order = [0, 4, 1, 5, 2, 6, 3, 7].indexOf(i); const k = st.done ? 1 : ease(lin(unfold, 2.0 + order * .22, 2.7 + order * .22)); J.push(mixPose([FOLD[i]], [D[i]], k)[0]); }
+    for (let i = 0; i < 8; i++) { const order = [0, 4, 1, 5, 2, 6, 3, 7].indexOf(i); const k = st.done ? 1 : ease(lin(unfold, 3.4 + order * .32, 4.5 + order * .32)); J.push(mixPose([FOLD[i]], [D[i]], k)[0]); }
     // a twitch now and then: one front leg lifts and taps
     st.twitch -= dt; if (st.twitch < -3 - Math.random() * 4) st.twitch = .5; if (st.twitch > 0) { const a = Math.sin((1 - st.twitch / .5) * Math.PI); J[4][3] = J[4][3].clone().add(V(0, a * .35, a * .25)); J[4][2] = J[4][2].clone().add(V(0, a * .25, a * .15)); }
     lk.setLegs(J, palps(st.t));
-    lk.group.position.set(0, .3 - (1 - rise) * 1.5 + Math.sin(st.t * 1.6) * .012, .05 - (1 - rise) * 1.3); lk.group.visible = rise > .015;
+    lk.group.position.set(0, (.3 - (1 - rise) * 1.5) * q + Math.sin(st.t * 1.6) * .008, (.05 - (1 - rise) * 1.3) * q); lk.group.visible = rise > .015;
     lk.group.rotation.set(.18, .22 + st.smx * .12, .13);
     lk.head.rotation.set(-.05 + st.smy * .25, st.smx * .45, 0);
     renderer.render(scene, cam);
   }
   try { renderer.compile(scene, cam); } catch {}
   requestAnimationFrame(frame);
-  return { st, size, skip() { st.introStart = performance.now() - 6100; st.flashed = true; } };
+  return { st, size, skip() { st.introStart = performance.now() - (END + .1) * 1000; st.flashed = true; } };
 }
