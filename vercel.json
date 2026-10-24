@@ -1,0 +1,1 @@
+{ "cleanUrls": true, "functions": { "api/fetch.js": { "maxDuration": 20 } }, "headers": [ { "source": "/assets/(.*)", "headers": [ { "key": "cache-control", "value": "public, max-age=3600" } ] } ] }

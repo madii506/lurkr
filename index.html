@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>lurkr · build your own web crawler</title>
+<meta name="description" content="Build your own lurkr. Give it a page to start from and the words you care about. It reads the web one page at a time and brings back every page that mentions them.">
+<meta property="og:title" content="lurkr">
+<meta property="og:description" content="Build your own lurkr. Tell it what to watch. It lurks until it finds it.">
+<meta property="og:image" content="https://lurkr.vercel.app/assets/img/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/fav32.png">
+<link rel="icon" type="image/png" sizes="64x64" href="/assets/img/fav64.png">
+<link rel="apple-touch-icon" href="/assets/img/fav180.png">
+<link rel="preload" href="/assets/fonts/jbm.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/css/site.css?v=2">
+<script>if (!/[?&]skip/.test(location.search) && !sessionStorage.getItem('lurkr.seen')) document.documentElement.classList.add('intro');</script>
+<script type="importmap">{ "imports": { "three": "/assets/js/vendor/three.module.min.js" } }</script>
+</head>
+<body>
+<div id="intro" aria-hidden="true"><span class="i-cur"></span><button class="i-skip" id="iSkip" type="button" aria-label="skip the intro"><svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+<div id="flash" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="nav" id="nav">
+  <a class="brand" href="/"><svg viewBox="0 0 32 32" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 15 7 7 3 14M12 17 4 12 1 20M19 15l6-8 4 7M20 17l8-5 3 8M13 19l-6 4-2 7M19 19l6 4 2 7M14 20l-3 5 1 6M18 20l3 5-1 6"/></g><ellipse cx="16" cy="17" rx="4.2" ry="3.6" fill="currentColor"/><circle cx="14.6" cy="16.4" r=".9" fill="#050506"/><circle cx="17.4" cy="16.4" r=".9" fill="#050506"/></svg>lurkr</a>
+  <nav class="links"><a href="#how">how</a><a href="#build">build</a><a href="#lair">your lurkrs</a><a href="#finds">finds</a><a href="#faq">faq</a></nav>
+  <a class="cta" href="#build">build a lurkr</a>
+</header>
+
+<main>
+<section class="hero" id="top">
+  <canvas id="stage" aria-label="A pale long-legged creature perched on a glowing screen, reading it"></canvas>
+  <div class="hero-copy">
+    <div class="eyebrow"><span class="dot"></span><span>a web crawler that lurks for you</span></div>
+    <h1>Build your own lurkr.</h1>
+    <p>Tell it what to watch. It lurks until it finds it. It reads the web one page at a time, follows the links, and brings back every page that mentions your words.</p>
+    <div class="row"><a class="btn" href="#build">build a lurkr</a><a class="btn ghost" href="#how">how it works</a></div>
+    <div class="live" id="heroLive"></div>
+  </div>
+  <div class="hero-foot">scroll</div>
+</section>
+
+<section class="sec" id="how">
+  <div class="wrap">
+    <div class="sh"><span class="sn">01</span><span class="sl">how it works</span></div>
+    <h2>It reads. <em>You sleep.</em></h2>
+    <p class="lede">A lurkr is a small program that reads public web pages for you. You tell it where to start and what to look for. It does the scrolling.</p>
+    <div class="story" id="story">
+      <div class="story-vis"><canvas id="storyCv"></canvas><span class="illus">illustration · scroll</span></div>
+      <div class="story-steps">
+        <div class="ss"><b>01</b><h3>Give it a start page</h3><p>Any public page: a docs site, a changelog, a blog, a news section. That's where it starts reading.</p><div class="fv"><span class="u">example.com/changelog</span></div></div>
+        <div class="ss"><b>02</b><h3>Tell it what to watch</h3><p>Up to 8 words. No words? It keeps the longest reads it finds.</p><div class="fv"><span class="chip">mainnet</span><span class="chip">airdrop</span><span class="chip">v2</span></div></div>
+        <div class="ss"><b>03</b><h3>It reads one page at a time</h3><p>It reads a page and queues its links. It ranks them by what led to finds before, waits its turn on the site, then reads the best one.</p><div class="fv mono">queue 600 · 4 deep on the site · 2 when it wanders</div></div>
+        <div class="ss"><b>04</b><h3>It brings back finds</h3><p>Every page that mentions your words, saved with the passage around the match. Matched, not checked.</p><div class="fv"><span class="pass">…the <mark>mainnet</mark> launch is scheduled for…</span></div></div>
+      </div>
+    </div>
+    <div class="two">
+      <div class="card manners">
+        <div class="ch">good manners</div>
+        <table>
+          <tr><td>Public pages only</td><td>Never logs in, never fills in a form, never touches private addresses.</td></tr>
+          <tr><td>robots.txt</td><td>Reads every site's robots.txt first and stays out where it's asked to.</td></tr>
+          <tr><td>Slow on purpose</td><td>At least 4 seconds between two visits to the same site, longer if the site asks.</td></tr>
+          <tr><td>Web pages only</td><td>HTML only, and only the first 1.5 MB of a page.</td></tr>
+          <tr><td>A short leash</td><td>4 links deep on its own site, 2 when it wanders. At most 600 links waiting.</td></tr>
+        </table>
+      </div>
+      <div class="card states">
+        <div class="ch">its states</div>
+        <div class="st"><i class="s-c"></i><b>crawling</b><span>reading a page or waiting for its turn on a site</span></div>
+        <div class="st"><i class="s-r"></i><b>resting</b><span>read everything in reach; rereads the start page later</span></div>
+        <div class="st"><i class="s-s"></i><b>stuck</b><span>the start page won't load; it says why and tries again</span></div>
+        <div class="st"><i class="s-p"></i><b>paused</b><span>you told it to stop</span></div>
+        <div class="ch" style="margin-top:22px">it learns</div>
+        <p class="small">Every link it follows gets judged: did it lead to a find? It weighs the words in the link and its text, and reads the promising kinds first. It also suggests new words it keeps seeing near your finds.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="build">
+  <div class="wrap">
+    <div class="sh"><span class="sn">02</span><span class="sl">build</span></div>
+    <h2>Build your lurkr.</h2>
+    <p class="lede">Name it, choose how it looks, tell it where to start and what to watch. It goes to work the moment you release it.</p>
+    <div class="builder">
+      <form class="card bform" id="bform" autocomplete="off">
+        <div class="bsec"><div class="bh"><b>01</b>name</div>
+          <div class="irow"><input id="bName" maxlength="24" placeholder="Quiet Lurkr"><button type="button" class="mini" id="bSuggest">suggest</button></div></div>
+        <div class="bsec"><div class="bh"><b>02</b>look</div>
+          <div class="opt"><span>skin</span><div class="seg" id="bLook"><button type="button" data-v="bone" class="on">bone</button><button type="button" data-v="ash">ash</button><button type="button" data-v="ink">ink</button><button type="button" data-v="rust">rust</button><button type="button" data-v="moss">moss</button></div></div>
+          <div class="opt"><span>eyes</span><div class="seg" id="bEyes"><button type="button" data-v="2">2</button><button type="button" data-v="4">4</button><button type="button" data-v="8" class="on">8</button><button type="button" data-v="12">12</button></div></div>
+          <div class="opt"><span>legs</span><input type="range" id="bLegs" min="80" max="135" value="100"><em id="bLegsV">100%</em></div>
+        </div>
+        <div class="bsec"><div class="bh"><b>03</b>orders</div>
+          <label class="fl">start page<input id="bStart" placeholder="example.com/changelog" inputmode="url"></label>
+          <label class="fl">words to watch <small>up to 8 · enter to add</small>
+            <div class="chips" id="bWords"><input id="bWordIn" placeholder="mainnet"></div></label>
+          <div class="opt"><span>range</span><div class="seg" id="bRange"><button type="button" data-v="site" class="on">stay on the site</button><button type="button" data-v="wander">wander off</button></div></div>
+          <div class="opt"><span>pace</span><div class="seg" id="bPace"><button type="button" data-v="calm">calm · 20s</button><button type="button" data-v="steady" class="on">steady · 9s</button><button type="button" data-v="quick">quick · 4s</button></div></div>
+        </div>
+        <div class="berr" id="bErr"></div>
+        <button class="btn wide" id="bGo" type="submit">release it</button>
+        <p class="small center">It reads public pages from our server and keeps its finds in this browser.</p>
+      </form>
+      <div class="card bprev">
+        <canvas id="prev"></canvas>
+        <div class="pv-info"><div class="pv-l">your lurkr</div><div class="pv-n" id="pvName">Quiet Lurkr</div>
+          <div class="pv-row"><span>starts at</span><b id="pvStart">—</b></div><div class="pv-row"><span>watches for</span><b id="pvWords">no words: it keeps the long reads</b></div>
+          <div class="pv-row"><span>range</span><b id="pvRange">stays on the site</b></div><div class="pv-row"><span>pace</span><b id="pvPace">a page every 9 seconds</b></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="lair">
+  <div class="wrap">
+    <div class="sh"><span class="sn">03</span><span class="sl">your lurkrs</span></div>
+    <h2>Watch it work.</h2>
+    <p class="lede">Every page it reads, every link it follows, every find. Live.</p>
+    <div class="lair">
+      <div class="roster card" id="roster"></div>
+      <div class="detail" id="detail"></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="finds">
+  <div class="wrap">
+    <div class="sh"><span class="sn">04</span><span class="sl">finds</span></div>
+    <h2>What it brought back.</h2>
+    <div class="fbar"><input id="fSearch" placeholder="search your finds"><div class="seg" id="fWho"></div><div class="exp"><button class="mini" id="exCsv">export CSV</button><button class="mini" id="exMd">export Markdown</button></div></div>
+    <div class="flist" id="flist"></div>
+  </div>
+</section>
+
+<section class="sec" id="faq">
+  <div class="wrap narrow">
+    <div class="sh"><span class="sn">05</span><span class="sl">questions</span></div>
+    <h2>Straight answers.</h2>
+    <details open><summary>What is a lurkr?</summary><p>A small web crawler you own. It starts at one page, reads it, collects its links and reads the most promising ones, one at a time. Every page that mentions one of your words is saved with the passage around the match.</p></details>
+    <details><summary>Does it keep going when I close the tab?</summary><p>Not yet. Today your lurkrs run while this page is open, and everything they find is saved in this browser. Lurking while you sleep needs a small server-side store; it is the next thing we switch on.</p></details>
+    <details><summary>Is it allowed to read any site?</summary><p>Only public pages, and only where the site's robots.txt allows crawlers. It identifies itself as lurkrbot, waits between visits to the same site, never logs in and never fills in forms.</p></details>
+    <details><summary>Are the finds true?</summary><p>A find means the page mentions your word. It is matched, not checked: read the passage and open the page before you act on anything.</p></details>
+    <details><summary>Why did it get stuck?</summary><p>Its start page wouldn't load: the site blocked crawlers, the address was wrong, or the page isn't HTML. The status tells you why, and it tries again by itself.</p></details>
+    <details><summary>What does it learn?</summary><p>Which kinds of links lead to finds. Each link it follows is judged, and the words in that link gain or lose weight. Its card shows what it heads for, what it avoids, and how its hit rate changed.</p></details>
+  </div>
+</section>
+
+<section class="end">
+  <canvas id="endCv"></canvas>
+  <div class="wrap"><h2>Everyone lurks.<br><em>Yours does the reading.</em></h2><a class="btn" href="#build">build your own lurkr</a></div>
+</section>
+</main>
+<script type="module" src="/assets/js/app.js?v=2"></script>
+</body>
+</html>
