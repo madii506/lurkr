@@ -3,17 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>lurkr · build your own web crawler</title>
+<title>lurkr</title>
 <meta name="description" content="Build your own lurkr. Give it a page to start from and the words you care about. It reads the web one page at a time and brings back every page that mentions them.">
 <meta property="og:title" content="lurkr">
 <meta property="og:description" content="Build your own lurkr. Tell it what to watch. It lurks until it finds it.">
 <meta property="og:image" content="https://lurkr-iota.vercel.app/assets/img/og.png">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/fav32.png">
-<link rel="icon" type="image/png" sizes="64x64" href="/assets/img/fav64.png">
-<link rel="apple-touch-icon" href="/assets/img/fav180.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/fav32.png?v=2">
+<link rel="icon" type="image/png" sizes="64x64" href="/assets/img/fav64.png?v=2">
+<link rel="apple-touch-icon" href="/assets/img/fav180.png?v=2">
 <link rel="preload" href="/assets/fonts/jbm.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/css/site.css?v=2">
+<link rel="stylesheet" href="/assets/css/site.css?v=3">
 <script>if (!/[?&]skip/.test(location.search) && !sessionStorage.getItem('lurkr.seen')) document.documentElement.classList.add('intro');</script>
 <script type="importmap">{ "imports": { "three": "/assets/js/vendor/three.module.min.js" } }</script>
 </head>
@@ -32,7 +32,6 @@
 <section class="hero" id="top">
   <canvas id="stage" aria-label="A pale long-legged creature perched on a glowing screen, reading it"></canvas>
   <div class="hero-copy">
-    <div class="eyebrow"><span class="dot"></span><span>a web crawler that lurks for you</span></div>
     <h1>Build your own lurkr.</h1>
     <p>Tell it what to watch. It lurks until it finds it. It reads the web one page at a time, follows the links, and brings back every page that mentions your words.</p>
     <div class="row"><a class="btn" href="#build">build a lurkr</a><a class="btn ghost" href="#how">how it works</a></div>
@@ -153,6 +152,6 @@
   <div class="wrap"><h2>Everyone lurks.<br><em>Yours does the reading.</em></h2><a class="btn" href="#build">build your own lurkr</a></div>
 </section>
 </main>
-<script type="module" src="/assets/js/app.js?v=2"></script>
+<script type="module" src="/assets/js/app.js?v=3"></script>
 </body>
 </html>
